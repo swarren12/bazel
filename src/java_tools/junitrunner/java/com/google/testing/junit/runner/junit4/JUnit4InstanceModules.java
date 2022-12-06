@@ -15,6 +15,7 @@
 package com.google.testing.junit.runner.junit4;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import javax.inject.Singleton;
 
@@ -30,20 +31,26 @@ public final class JUnit4InstanceModules {
    * A stateful dagger module that holds the supplied test suite class.
    */
   public static final class SuiteClass {
-    private final Class<?> suiteClass;
+    private final List<Class<?>> suiteClasses;
 
     public SuiteClass(Class<?> suiteClass) {
-      this.suiteClass = suiteClass;
+      this(Collections.singletonList(suiteClass));
+    }
+
+    public SuiteClass(List<Class<?>> suiteClasses) {
+      this.suiteClasses = suiteClasses;
     }
 
     @TopLevelSuite
-    Class<?> topLevelSuite() {
-      return suiteClass;
+    List<Class<?>> topLevelSuite() {
+      return suiteClasses;
     }
 
     @TopLevelSuite
-    static String topLevelSuiteName(@TopLevelSuite Class<?> suite) {
-      return suite.getCanonicalName();
+    static String topLevelSuiteName(@TopLevelSuite List<Class<?>> suites) {
+      return suites.size() > 1
+              ? suites.get(0).getCanonicalName() + " + " + (suites.size() - 1) + " others"
+              : suites.get(0).getCanonicalName();
     }
   }
 

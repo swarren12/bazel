@@ -25,11 +25,14 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 import javax.inject.Singleton;
 import org.junit.internal.TextListener;
+import org.junit.runner.Computer;
 import org.junit.runner.Request;
+import org.junit.runner.notification.RunListener;
 import org.junit.runner.notification.RunListener;
 
 /**
@@ -68,7 +71,7 @@ public abstract class JUnit4RunnerBaseModule {
   }
 
   @Singleton
-  static Request provideRequest(@TopLevelSuite Class<?> suiteClass) {
+  static Request provideRequest(@TopLevelSuite List<Class<?>> suiteClasses) {
     /*
      * JUnit4Runner requests the Runner twice, once to build the model (before
      * filtering) and once to run the tests (after filtering). Constructing the
@@ -78,7 +81,9 @@ public abstract class JUnit4RunnerBaseModule {
      * but users of Bazel might use an earlier version of JUnit, so to be safe
      * we keep the memoization here.
      */
-    Request request = Request.aClass(suiteClass);
+    Request request = suiteClasses.size() == 1
+            ? Request.aClass(suiteClasses.get(0))
+            : Request.classes(Computer.serial(), suiteClasses.toArray(new Class[0]));
     return new MemoizingRequest(request);
   }
 

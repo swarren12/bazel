@@ -15,6 +15,8 @@
 package com.google.testing.junit.runner.junit4;
 
 import com.google.testing.junit.runner.util.Factory;
+
+import java.util.List;
 import java.util.function.Supplier;
 import org.junit.runner.Request;
 
@@ -22,9 +24,9 @@ import org.junit.runner.Request;
  * A factory that supplies {@link Request}.
  */
 public final class RequestFactory implements Factory<Request> {
-  private final Supplier<Class<?>> suiteClassSupplier;
+  private final Supplier<List<Class<?>>> suiteClassSupplier;
 
-  public RequestFactory(Supplier<Class<?>> suiteClassSupplier) {
+  public RequestFactory(Supplier<List<Class<?>>> suiteClassSupplier) {
     assert suiteClassSupplier != null;
     this.suiteClassSupplier = suiteClassSupplier;
   }
@@ -38,7 +40,7 @@ public final class RequestFactory implements Factory<Request> {
     return request;
   }
 
-  public static Factory<Request> create(Supplier<Class<?>> suiteClassSupplier) {
+  public static Factory<Request> create(Supplier<List<Class<?>>> suiteClassSupplier) {
     return new RequestFactory(suiteClassSupplier);
   }
 }

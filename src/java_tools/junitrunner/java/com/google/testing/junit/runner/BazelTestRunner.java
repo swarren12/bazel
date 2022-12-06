@@ -21,7 +21,10 @@ import com.google.testing.junit.runner.junit4.JUnit4Runner;
 import java.io.PrintStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -39,9 +42,9 @@ import java.util.concurrent.TimeUnit;
 public class BazelTestRunner {
   /**
    * If no arguments are passed on the command line, use this System property to
-   * determine which test suite to run.
+   * determine which test suite(s) to run.
    */
-  static final String TEST_SUITE_PROPERTY_NAME = "bazel.test_suite";
+  static final String TEST_SUITE_PROPERTY_NAMES = "bazel.test_suite";
 
   private BazelTestRunner() {
     // utility class; should not be instantiated
@@ -65,14 +68,14 @@ public class BazelTestRunner {
   public static void main(String[] args) {
     PrintStream stderr = System.err;
 
-    String suiteClassName = System.getProperty(TEST_SUITE_PROPERTY_NAME);
-    if (!checkTestSuiteProperty(suiteClassName)) {
+    String suiteClassNames = System.getProperty(TEST_SUITE_PROPERTY_NAMES);
+    if (!checkTestSuiteProperty(suiteClassNames)) {
       System.exit(2);
     }
 
     int exitCode;
     try {
-      exitCode = runTestsInSuite(suiteClassName, args);
+      exitCode = runTestsInSuite(suiteClassNames, args);
     } catch (Throwable e) {
       // An exception was thrown by the runner. Print the error to the output stream so it will be
       // logged
@@ -105,19 +108,19 @@ public class BazelTestRunner {
     if (testSuiteProperty == null) {
       System.err.printf(
           "Error: The test suite Java system property %s is required but missing.%n",
-          TEST_SUITE_PROPERTY_NAME);
+              TEST_SUITE_PROPERTY_NAMES);
       System.err.println();
       System.err.println("This property is set automatically when running with Bazel like such:");
       System.err.printf("  java -D%s=[test-suite-class] %s%n",
-          TEST_SUITE_PROPERTY_NAME, BazelTestRunner.class.getName());
+              TEST_SUITE_PROPERTY_NAMES, BazelTestRunner.class.getName());
       System.err.printf("  java -D%s=[test-suite-class] -jar [deploy-jar]%n",
-          TEST_SUITE_PROPERTY_NAME);
+              TEST_SUITE_PROPERTY_NAMES);
       System.err.println("E.g.:");
       System.err.printf("  java -D%s=org.example.testing.junit.runner.SmallTests %s%n",
-          TEST_SUITE_PROPERTY_NAME, BazelTestRunner.class.getName());
+              TEST_SUITE_PROPERTY_NAMES, BazelTestRunner.class.getName());
       System.err.printf("  java -D%s=org.example.testing.junit.runner.SmallTests "
               + "-jar SmallTests_deploy.jar%n",
-          TEST_SUITE_PROPERTY_NAME);
+              TEST_SUITE_PROPERTY_NAMES);
       return false;
     }
     return true;
@@ -127,13 +130,13 @@ public class BazelTestRunner {
    * Runs the tests in the specified suite. Looks for the suite class in the given classLoader, or
    * in the system classloader if none is specified.
    */
-  private static int runTestsInSuite(String suiteClassName, String[] args) {
-    Class<?> suite = getTestClass(suiteClassName);
+  private static int runTestsInSuite(String suiteClassNames, String[] args) {
+    List<Class<?>> suites = getTestClasses(suiteClassNames);
 
-    if (suite == null) {
+    if (suites.isEmpty()) {
       // No class found corresponding to the system property passed in from Bazel
-      if (args.length == 0 && suiteClassName != null) {
-        System.err.printf("Class not found: [%s]%n", suiteClassName);
+      if (args.length == 0 && suiteClassNames != null) {
+        System.err.printf("Class not found: [%s]%n", suiteClassNames);
         return 2;
       }
     }
@@ -141,23 +144,27 @@ public class BazelTestRunner {
     // TODO(kush): Use a new classloader for the following instantiation.
     JUnit4Runner runner =
         JUnit4Bazel.builder()
-            .suiteClass(new SuiteClass(suite))
+            .suiteClass(new SuiteClass(suites))
             .config(new Config(args))
             .build()
             .runner();
     return runner.run().wasSuccessful() ? 0 : 1;
   }
 
-  private static Class<?> getTestClass(String name) {
-    if (name == null) {
-      return null;
+  private static List<Class<?>> getTestClasses(String names) {
+    if (names == null) {
+      return Collections.emptyList();
     }
 
-    try {
-      return Class.forName(name);
-    } catch (ClassNotFoundException e) {
-      return null;
+    List<Class<?>> suiteClasses = new ArrayList<>();
+    for (String name : names.split(";")) {
+      try {
+        suiteClasses.add(Class.forName(names));
+      } catch (ClassNotFoundException e) {
+        return Collections.emptyList();
+      }
     }
+    return suiteClasses;
   }
 
   /**

@@ -16,10 +16,12 @@ package com.google.testing.junit.runner.junit4;
 
 import com.google.testing.junit.runner.util.Factory;
 
+import java.util.List;
+
 /**
  * A factory that supplies a top level suite {@link Class<?>}.
  */
-public final class TopLevelSuiteFactory implements Factory<Class<?>> {
+public final class TopLevelSuiteFactory implements Factory<List<Class<?>>> {
   private final JUnit4InstanceModules.SuiteClass module;
 
   public TopLevelSuiteFactory(JUnit4InstanceModules.SuiteClass module) {
@@ -28,14 +30,14 @@ public final class TopLevelSuiteFactory implements Factory<Class<?>> {
   }
 
   @Override
-  public Class<?> get() {
-    if (module.topLevelSuite() == null) {
+  public List<Class<?>> get() {
+    if (module.topLevelSuite() == null || module.topLevelSuite().isEmpty()) {
       throw new NullPointerException();
     }
     return module.topLevelSuite();
   }
 
-  public static Factory<Class<?>> create(JUnit4InstanceModules.SuiteClass module) {
+  public static Factory<List<Class<?>>> create(JUnit4InstanceModules.SuiteClass module) {
     return new TopLevelSuiteFactory(module);
   }
 }

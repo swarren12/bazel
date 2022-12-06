@@ -15,15 +15,17 @@
 package com.google.testing.junit.runner.junit4;
 
 import com.google.testing.junit.runner.util.Factory;
+
+import java.util.List;
 import java.util.function.Supplier;
 
 /**
  * A factory that supplies a top level suite {@link String}.
  */
 public final class TopLevelSuiteNameFactory implements Factory<String> {
-  private final Supplier<Class<?>> suiteSupplier;
+  private final Supplier<List<Class<?>>> suiteSupplier;
 
-  public TopLevelSuiteNameFactory(Supplier<Class<?>> suiteSupplier) {
+  public TopLevelSuiteNameFactory(Supplier<List<Class<?>>> suiteSupplier) {
     assert suiteSupplier != null;
     this.suiteSupplier = suiteSupplier;
   }
@@ -38,7 +40,7 @@ public final class TopLevelSuiteNameFactory implements Factory<String> {
     return topLevelSuiteName;
   }
 
-  public static Factory<String> create(Supplier<Class<?>> suiteSupplier) {
+  public static Factory<String> create(Supplier<List<Class<?>>> suiteSupplier) {
     return new TopLevelSuiteNameFactory(suiteSupplier);
   }
 }

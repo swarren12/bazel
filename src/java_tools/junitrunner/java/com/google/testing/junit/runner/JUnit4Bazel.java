@@ -53,6 +53,7 @@ import com.google.testing.junit.runner.util.MemoizingSupplier;
 import com.google.testing.junit.runner.util.SetFactory;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.junit.internal.TextListener;
@@ -64,7 +65,7 @@ import org.junit.runner.notification.RunListener;
  * are being injected automatically.
  */
 public final class JUnit4Bazel {
-  private Supplier<Class<?>> topLevelSuiteSupplier;
+  private Supplier<List<Class<?>>> topLevelSuiteSupplier;
 
   private Supplier<Request> requestMemoizingSupplier;
 
